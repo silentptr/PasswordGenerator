@@ -99,7 +99,7 @@ int main(int argc, char** argv)
         return 1;
     }
     
-    printf("Generating a password of length %i...\n", length);
+    printf("Generating a password of length %li...\n", length);
     Buffer randBuffer = NewBuffer(length);
     CHECK_NULL_BUFFER(randBuffer);
 

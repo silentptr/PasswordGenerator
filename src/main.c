@@ -8,7 +8,7 @@
 
 #ifdef __WIN32
     #define SYS_PAUSE() if(system(NULL)){system("PAUSE");}
-#elif
+#else
     #define SYS_PAUSE()
 #endif
 

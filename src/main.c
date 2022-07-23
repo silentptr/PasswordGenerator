@@ -78,7 +78,7 @@ int main(int argc, char** argv)
 {
     printf("Welcome to password generator v1!\n");
 
-    size_t length;
+    size_t length = 0;
 
     if (argc == 2)
     {
@@ -88,8 +88,11 @@ int main(int argc, char** argv)
     {
         printf("Enter password length: ");
         char input[100];
-        scanf("%s", input);
-        length = strtoull(input, NULL, 10);
+
+        if (scanf("%s", input))
+        {
+            length = strtoull(input, NULL, 10);
+        }
     }
     
     if (errno == ERANGE || length < 1 || length > 4096)

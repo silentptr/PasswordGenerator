@@ -31,6 +31,13 @@ Buffer NewBuffer(size_t length)
 
     buffer->length = length;
     buffer->ptr = malloc(length);
+
+    if (buffer->ptr == NULL)
+    {
+        free(buffer);
+        return NULL;
+    }
+    
     memset(buffer->ptr, 0, length);
     return buffer;
 }

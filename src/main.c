@@ -3,80 +3,124 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 #include <openssl/rand.h>
 #include <openssl/evp.h>
 
-#ifdef __WIN32
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32)
     #define SYS_PAUSE() if(system(NULL)){system("PAUSE");}
 #else
     #define SYS_PAUSE()
 #endif
 
-struct __SecureBuffer
+const uint8_t ALL_CHARS[] =
 {
-    uint8_t* ptr;
-    size_t length;
+    'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
+    'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
+    '!', '#', '$', '%', '&', '*'
 };
 
-typedef struct __SecureBuffer* Buffer;
-
-Buffer NewBuffer(size_t length)
+const uint8_t SYMBOL_CHARS[] =
 {
-    Buffer buffer = malloc(sizeof(struct __SecureBuffer));
+    '!', '#', '$', '%', '&', '*'
+};
 
-    if (buffer == NULL)
+bool bignum_to_size_t(BIGNUM* bn, size_t* out)
+{
+    char* str = BN_bn2dec(bn);
+
+    if (str == NULL)
     {
-        return NULL;
+        return false;
     }
 
-    buffer->length = length;
-    buffer->ptr = malloc(length);
-
-    if (buffer->ptr == NULL)
+    if (sscanf(str, "%zu", out) != 1)
     {
-        free(buffer);
-        return NULL;
+        return false;
     }
-    
-    memset(buffer->ptr, 0, length);
-    return buffer;
+
+    return true;
 }
 
-void DeleteBuffer(Buffer buffer)
+int gen_password(size_t length, uint8_t* buffer)
 {
-    memset(buffer->ptr, 0, buffer->length);
-    free(buffer->ptr);
-    free(buffer);
-}
+    BIGNUM* rnd = BN_new();
 
-#define CHECK_NULL_BUFFER(buff) if(buff==NULL){printf("An error has occured.\n");SYS_PAUSE();return 1;}
-
-Buffer BufferToBase64(Buffer input)
-{
-    Buffer temp = NewBuffer(input->length * 2);
-
-    if (temp == NULL)
+    if (rnd == NULL)
     {
-        return NULL;
+        return 0;
     }
 
-    size_t len = EVP_EncodeBlock(temp->ptr, input->ptr, input->length);
-    Buffer result = NewBuffer(len + 1);
+    BIGNUM* range = BN_new();
 
-    if (result == NULL)
+    if (range == NULL)
     {
-        DeleteBuffer(temp);
-        return NULL;
+        BN_free(rnd);
+        return 0;
     }
 
-    memcpy(result->ptr, temp->ptr, len + 1);
-    DeleteBuffer(temp);
-    return result;
+    int error;
+    size_t symbol_count = 0;
+    bool symbol;
+    uint8_t new_char;
+    size_t char_index;
+
+    for (size_t i = 0; i < length; ++i)
+    {
+        if (RAND_poll() == 0)
+        {
+            BN_free(rnd);
+            BN_free(range);
+            return 1;
+        }
+
+        if (i == length - 1 && symbol_count == 0)
+        {
+            BN_set_word(range, 6);
+            symbol = true;
+        }
+        else
+        {
+            BN_set_word(range, 58);
+            symbol = false;
+        }
+
+        BN_zero(rnd);
+
+        if (BN_rand_range(rnd, range) == 0)
+        {
+            BN_free(rnd);
+            BN_free(range);
+            return 1;
+        }
+
+        if (bignum_to_size_t(rnd, &char_index) == false)
+        {
+            BN_free(rnd);
+            BN_free(range);
+            return 1;
+        }
+
+        if (symbol)
+        {
+            new_char = SYMBOL_CHARS[char_index];
+        }
+        else
+        {
+            new_char = ALL_CHARS[char_index];
+        }
+
+        buffer[i] = new_char;
+    }
+
+    BN_free(rnd);
+    BN_free(range);
+    return 1;
 }
 
 int main(int argc, char** argv)
 {
-    printf("Welcome to password generator v1!\n");
+    printf("Welcome to password generator v1.1!\n");
 
     size_t length = 0;
 
@@ -98,31 +142,23 @@ int main(int argc, char** argv)
     if (errno == ERANGE || length < 1 || length > 4096)
     {
         printf("Password length must be 1-4096 characters.\n");
-        SYS_PAUSE();
-        return 1;
+        SYS_PAUSE()
+        return EXIT_FAILURE;
     }
     
-    printf("Generating a password of length %li...\n", length);
-    Buffer randBuffer = NewBuffer(length);
-    CHECK_NULL_BUFFER(randBuffer);
+    printf("Generating a password of length %zu...\n", length);
+    uint8_t* buffer = malloc(length + 1);
+    buffer[length] = 0;
 
-    if (RAND_bytes(randBuffer->ptr, length) != 1)
+    if (!gen_password(length, buffer))
     {
-        DeleteBuffer(randBuffer);
-        printf("OpenSSL is fucked\n");
-        SYS_PAUSE();
-        return 1;
+        free(buffer);
+        printf("Couldn't create password.\n");
+        return EXIT_FAILURE;
     }
 
-    Buffer encodedBuffer = BufferToBase64(randBuffer);
-    CHECK_NULL_BUFFER(encodedBuffer);
-    DeleteBuffer(randBuffer);
-    Buffer finalBuffer = NewBuffer(length + 1);
-    CHECK_NULL_BUFFER(finalBuffer);
-    memcpy(finalBuffer->ptr, encodedBuffer->ptr, length);
-    DeleteBuffer(encodedBuffer);
-    printf("Generated password: %s\n", finalBuffer->ptr);
-    DeleteBuffer(finalBuffer);
-    SYS_PAUSE();
-    return 0;
+    printf("Generated password: %s\n", buffer);
+    free(buffer);
+    SYS_PAUSE()
+    return EXIT_SUCCESS;
 }

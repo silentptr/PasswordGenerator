@@ -32,11 +32,11 @@ bool bignum_to_size_t(BIGNUM* bn, size_t* out)
 
     if (sscanf(str, "%zu", out) != 1)
     {
-        OPENSSL_free(out);
+        OPENSSL_free(str);
         return false;
     }
 
-    OPENSSL_free(out);
+    OPENSSL_free(str);
     return true;
 }
 

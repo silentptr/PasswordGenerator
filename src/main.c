@@ -1,11 +1,6 @@
 #include <errno.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <stdbool.h>
 #include <openssl/rand.h>
-#include <openssl/evp.h>
 
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32)
     #define SYS_PAUSE() if(system(NULL)){system("PAUSE");}
@@ -17,6 +12,7 @@ const uint8_t ALL_CHARS[] =
 {
     'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
     'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
+    '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
     '!', '#', '$', '%', '&', '*'
 };
 

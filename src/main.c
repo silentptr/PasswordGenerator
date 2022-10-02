@@ -107,6 +107,11 @@ int gen_password(size_t length, uint8_t* buffer)
         else
         {
             new_char = ALL_CHARS[char_index];
+
+            if (char_index > 61)
+            {
+                ++symbol_count;
+            }
         }
 
         buffer[i] = new_char;
@@ -151,14 +156,14 @@ int main(int argc, char** argv)
 
     if (!gen_password(length, buffer))
     {
-        memset(buffer, 0, sizeof(buffer));
+        memset(buffer, 0, length + 1);
         free(buffer);
         printf("Couldn't create password.\n");
         return EXIT_FAILURE;
     }
 
     printf("Generated password: %s\n", buffer);
-    memset(buffer, 0, sizeof(buffer));
+    memset(buffer, 0, length + 1);
     free(buffer);
     SYS_PAUSE()
     return EXIT_SUCCESS;

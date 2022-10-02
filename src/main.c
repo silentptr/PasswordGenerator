@@ -77,7 +77,7 @@ int gen_password(size_t length, uint8_t* buffer)
         }
         else
         {
-            BN_set_word(range, 58);
+            BN_set_word(range, 68);
             symbol = false;
         }
 

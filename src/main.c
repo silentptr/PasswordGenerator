@@ -1,5 +1,6 @@
 #include <errno.h>
 #include <stdbool.h>
+#include <string.h>
 #include <openssl/rand.h>
 
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32)
@@ -150,12 +151,14 @@ int main(int argc, char** argv)
 
     if (!gen_password(length, buffer))
     {
+        memset(buffer, 0, sizeof(buffer));
         free(buffer);
         printf("Couldn't create password.\n");
         return EXIT_FAILURE;
     }
 
     printf("Generated password: %s\n", buffer);
+    memset(buffer, 0, sizeof(buffer));
     free(buffer);
     SYS_PAUSE()
     return EXIT_SUCCESS;

@@ -41,13 +41,13 @@ bool bignum_to_size_t(BIGNUM* bn, size_t* out)
     return true;
 }
 
-int gen_password(size_t length, uint8_t* buffer)
+bool gen_password(size_t length, uint8_t* buffer)
 {
     BIGNUM* rnd = BN_new();
 
     if (rnd == NULL)
     {
-        return 0;
+        return false;
     }
 
     BIGNUM* range = BN_new();
@@ -55,7 +55,7 @@ int gen_password(size_t length, uint8_t* buffer)
     if (range == NULL)
     {
         BN_free(rnd);
-        return 0;
+        return false;
     }
 
     int error;
@@ -66,13 +66,6 @@ int gen_password(size_t length, uint8_t* buffer)
 
     for (size_t i = 0; i < length; ++i)
     {
-        if (RAND_poll() == 0)
-        {
-            BN_free(rnd);
-            BN_free(range);
-            return 1;
-        }
-
         if (i == length - 1 && symbol_count == 0)
         {
             BN_set_word(range, 6);
@@ -90,14 +83,14 @@ int gen_password(size_t length, uint8_t* buffer)
         {
             BN_free(rnd);
             BN_free(range);
-            return 1;
+            return false;
         }
 
         if (bignum_to_size_t(rnd, &char_index) == false)
         {
             BN_free(rnd);
             BN_free(range);
-            return 1;
+            return false;
         }
 
         if (symbol)
@@ -119,12 +112,18 @@ int gen_password(size_t length, uint8_t* buffer)
 
     BN_free(rnd);
     BN_free(range);
-    return 1;
+    return true;
 }
 
 int main(int argc, char** argv)
 {
     printf("Welcome to password generator v1.1!\n");
+
+    if (RAND_poll() == 0)
+    {
+        printf("An error occured.");
+        return EXIT_FAILURE;
+    }
 
     size_t length = 0;
 

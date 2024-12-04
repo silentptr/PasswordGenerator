@@ -117,19 +117,19 @@ bool gen_password(size_t length, uint8_t* buffer)
 
 int main(int argc, char** argv)
 {
-    printf("Welcome to password generator v1.1!\n");
+    puts("Welcome to password generator v1.1!");
 
     if (RAND_poll() == 0)
     {
-        printf("An error occured.");
+        puts("An error occured.");
         return EXIT_FAILURE;
     }
 
     size_t length = 0;
 
-    if (argc == 2)
+    if (argc >= 2)
     {
-        length = strtoull(argv[1], NULL, 10);
+        length = strtoull(argv[argc - 1], NULL, 10);
     }
     else
     {
@@ -144,7 +144,7 @@ int main(int argc, char** argv)
     
     if (errno == ERANGE || length < 1 || length > 4096)
     {
-        printf("Password length must be 1-4096 characters.\n");
+        puts("Password length must be 1-4096 characters.");
         SYS_PAUSE()
         return EXIT_FAILURE;
     }
@@ -156,14 +156,14 @@ int main(int argc, char** argv)
     if (!gen_password(length, buffer))
     {
         memset(buffer, 0, length + 1);
-        free(buffer);
-        printf("Couldn't create password.\n");
+        OPENSSL_clear_free(buffer, length + 1);
+        puts("Couldn't create password.");
         return EXIT_FAILURE;
     }
 
     printf("Generated password: %s\n", buffer);
     memset(buffer, 0, length + 1);
-    free(buffer);
+    OPENSSL_clear_free(buffer, length + 1);
     SYS_PAUSE()
     return EXIT_SUCCESS;
 }

@@ -41,7 +41,7 @@ void gen_password(Password& passwd)
 
 int main(int argc, char** argv)
 {
-    std::cout << "Welcome to password generator v1.2!\n";
+    std::cout << "Welcome to password generator v1.3!\n";
     std::cout << "Using OpenSSL " << OpenSSL_version(OPENSSL_VERSION_STRING) << '\n';
 
     if (RAND_poll() == 0)
